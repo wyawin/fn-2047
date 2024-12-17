@@ -6,9 +6,19 @@ interface WorkflowConnectionsProps {
   workflow: Workflow;
   connectingFrom: { nodeId: string | null; type: ConnectionType };
   mousePosition: { x: number; y: number };
+  onDeleteConnection: (connectionId: string) => void;
+  selectedConnection: string | null;
+  onSelectConnection: (connectionId: string | null) => void;
 }
 
-export function WorkflowConnections({ workflow, connectingFrom, mousePosition }: WorkflowConnectionsProps) {
+export function WorkflowConnections({ 
+  workflow, 
+  connectingFrom, 
+  mousePosition,
+  onDeleteConnection,
+  selectedConnection,
+  onSelectConnection
+}: WorkflowConnectionsProps) {
   const getNodeConnectionPoints = (nodeId: string, isSource: boolean, type: ConnectionType = 'default') => {
     const node = workflow.nodes.find(n => n.id === nodeId);
     if (!node) return { x: 0, y: 0 };
@@ -41,7 +51,9 @@ export function WorkflowConnections({ workflow, connectingFrom, mousePosition }:
               ${endX} ${endY}`;
   };
 
-  const getConnectionColor = (type: ConnectionType) => {
+  const getConnectionColor = (type: ConnectionType, isSelected: boolean) => {
+    if (isSelected) return '#1f51fe'; // primary-500
+    
     switch (type) {
       case 'true':
         return '#10b981'; // emerald-500
@@ -52,10 +64,15 @@ export function WorkflowConnections({ workflow, connectingFrom, mousePosition }:
     }
   };
 
+  const handleConnectionClick = (e: React.MouseEvent, connectionId: string) => {
+    e.stopPropagation();
+    onSelectConnection(connectionId);
+  };
+
   return (
     <svg className="absolute inset-0 pointer-events-none z-[500]" style={{ overflow: 'visible' }}>
       <defs>
-        {['default', 'true', 'false'].map(type => (
+        {['default', 'true', 'false', 'selected'].map(type => (
           <marker
             key={type}
             id={`arrowhead-${type}`}
@@ -65,7 +82,10 @@ export function WorkflowConnections({ workflow, connectingFrom, mousePosition }:
             refY="3.5"
             orient="auto"
           >
-            <polygon points="0 0, 10 3.5, 0 7" fill={getConnectionColor(type as ConnectionType)} />
+            <polygon 
+              points="0 0, 10 3.5, 0 7" 
+              fill={type === 'selected' ? '#1f51fe' : getConnectionColor(type as ConnectionType, false)} 
+            />
           </marker>
         ))}
       </defs>
@@ -74,16 +94,19 @@ export function WorkflowConnections({ workflow, connectingFrom, mousePosition }:
       {workflow.connections.map(connection => {
         const sourcePoint = getNodeConnectionPoints(connection.source, true, connection.type);
         const targetPoint = getNodeConnectionPoints(connection.target, false);
-        const color = getConnectionColor(connection.type);
+        const isSelected = connection.id === selectedConnection;
+        const color = getConnectionColor(connection.type, isSelected);
 
         return (
           <g key={connection.id}>
             <path
               d={getConnectionPath(sourcePoint.x, sourcePoint.y, targetPoint.x, targetPoint.y)}
               stroke={color}
-              strokeWidth="2"
+              strokeWidth={isSelected ? "3" : "2"}
               fill="none"
-              markerEnd={`url(#arrowhead-${connection.type})`}
+              style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
+              onClick={(e) => handleConnectionClick(e, connection.id)}
+              markerEnd={`url(#arrowhead-${isSelected ? 'selected' : connection.type})`}
             />
           </g>
         );
@@ -98,7 +121,7 @@ export function WorkflowConnections({ workflow, connectingFrom, mousePosition }:
             mousePosition.x,
             mousePosition.y
           )}
-          stroke={getConnectionColor(connectingFrom.type)}
+          stroke={getConnectionColor(connectingFrom.type, false)}
           strokeWidth="2"
           strokeDasharray="5,5"
           fill="none"

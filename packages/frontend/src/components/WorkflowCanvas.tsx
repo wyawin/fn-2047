@@ -9,6 +9,7 @@ import { useConnections } from '../hooks/useConnections';
 import { useNodeConfig } from '../hooks/useNodeConfig';
 import { useCanvasZoom } from '../hooks/useCanvasZoom';
 import { useNodeDeletion } from '../hooks/useNodeDeletion';
+import { useConnectionDeletion } from '../hooks/useConnectionDeletion';
 import { useNodeSelection } from '../hooks/useNodeSelection';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { ZoomIn, ZoomOut, Maximize } from 'lucide-react';
@@ -31,15 +32,23 @@ export function WorkflowCanvas({ workflow, onUpdateWorkflow }: WorkflowCanvasPro
   const { handleDragStart: handleNodeDragStart, createNode } = useDragAndDrop();
 
   const { deleteNode } = useNodeDeletion(workflow, onUpdateWorkflow);
+  const { deleteConnection } = useConnectionDeletion(workflow, onUpdateWorkflow);
 
   const { selectedNode, handleNodeSelect, handleCanvasClick, isNodeSelected } = 
     useNodeSelection(workflow);
 
+  const [selectedConnection, setSelectedConnection] = React.useState<string | null>(null);
+
   useKeyboardShortcuts({
     selectedNode,
+    selectedConnection,
     onDeleteNode: (nodeId) => {
       deleteNode(nodeId);
       handleNodeSelect(null);
+    },
+    onDeleteConnection: (connectionId) => {
+      deleteConnection(connectionId);
+      setSelectedConnection(null);
     },
     workflow
   });
@@ -56,7 +65,6 @@ export function WorkflowCanvas({ workflow, onUpdateWorkflow }: WorkflowCanvasPro
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
-      // e.preventDefault();
       const rect = e.currentTarget.getBoundingClientRect();
       const point = {
         x: e.clientX - rect.left,
@@ -77,26 +85,9 @@ export function WorkflowCanvas({ workflow, onUpdateWorkflow }: WorkflowCanvasPro
     handleConnectionStart(nodeId, type);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const position = {
-      x: (e.clientX - rect.left - zoom.position.x) / zoom.scale,
-      y: (e.clientY - rect.top - zoom.position.y) / zoom.scale
-    };
-
-    const newNode = createNode(position);
-    if (newNode) {
-      onUpdateWorkflow({
-        ...workflow,
-        nodes: [...workflow.nodes, newNode]
-      });
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+  const handleCanvasClickWithReset = (e: React.MouseEvent) => {
+    handleCanvasClick(e);
+    setSelectedConnection(null);
   };
 
   return (
@@ -138,9 +129,7 @@ export function WorkflowCanvas({ workflow, onUpdateWorkflow }: WorkflowCanvasPro
         onMouseMove={handleMouseMoveWithPan}
         onMouseUp={stopPanning}
         onMouseLeave={stopPanning}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onClick={handleCanvasClick}
+        onClick={handleCanvasClickWithReset}
       >
         {/* Canvas Background - Used for panning detection */}
         <div 
@@ -166,6 +155,9 @@ export function WorkflowCanvas({ workflow, onUpdateWorkflow }: WorkflowCanvasPro
               x: (mousePosition.x - zoom.position.x) / zoom.scale,
               y: (mousePosition.y - zoom.position.y) / zoom.scale
             }}
+            onDeleteConnection={deleteConnection}
+            selectedConnection={selectedConnection}
+            onSelectConnection={setSelectedConnection}
           />
 
           {workflow.nodes.map(node => (
@@ -175,7 +167,7 @@ export function WorkflowCanvas({ workflow, onUpdateWorkflow }: WorkflowCanvasPro
               workflow={workflow}
               onDragStart={() => handleDragStart(node.id)}
               onDragEnd={handleDragEnd}
-              onConnectionStart={(type) => handleNodeConnectionStart(node.id, type as ConnectionType)}
+              onConnectionStart={(type) => handleNodeConnectionStart(node.id, type)}
               onConnectionEnd={() => handleConnectionEnd(node.id)}
               isConnecting={!!connectingFrom.nodeId}
               isValidTarget={isValidTarget(node.id)}
