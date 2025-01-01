@@ -11,11 +11,21 @@ interface SourceInputProps {
 }
 
 export function SourceInput({ source, onChange, variables, excludeVariableId, label }: SourceInputProps) {
-  const availableVariables = variables.filter(v => v.id !== excludeVariableId);
+  const availableVariables = variables.filter(v => 
+    v.id !== excludeVariableId && 
+    (v.type === 'number' || v.type === 'calculated' || v.type === 'table-operation')
+  );
 
   const renderVariableOption = (variable: WorkflowVariable) => {
     if (variable.type === 'calculated') {
       return `${variable.name} (${getVariableDisplayValue(variable, variables)})`;
+    }
+    if (variable.type === 'table-operation') {
+      const tableVar = variables.find(v => v.id === variable.tableVariableId);
+      const column = tableVar?.type === 'table' 
+        ? tableVar.columns.find(c => c.id === variable.columnId)
+        : null;
+      return `${variable.name} (${variable.operation} of ${tableVar?.name || 'Unknown'}.${column?.name || 'Unknown'})`;
     }
     return variable.name;
   };
@@ -70,6 +80,13 @@ export function SourceInput({ source, onChange, variables, excludeVariableId, la
           <optgroup label="Calculated Variables">
             {availableVariables
               .filter(v => v.type === 'calculated')
+              .map(v => (
+                <option key={v.id} value={v.id}>{renderVariableOption(v)}</option>
+              ))}
+          </optgroup>
+          <optgroup label="Table Operations">
+            {availableVariables
+              .filter(v => v.type === 'table-operation')
               .map(v => (
                 <option key={v.id} value={v.id}>{renderVariableOption(v)}</option>
               ))}

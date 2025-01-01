@@ -1,4 +1,5 @@
 import { CalculatedVariable, WorkflowVariable } from '../types/variables';
+import { calculateTableOperation } from './tableOperation';
 
 export function calculateVariableValue(
   variable: CalculatedVariable,
@@ -14,6 +15,12 @@ export function calculateVariableValue(
     const sourceVariable = allVariables.find(v => v.id === source.value);
     if (!sourceVariable) return null;
 
+    // If the source is a table operation variable, calculate it
+    if (sourceVariable.type === 'table-operation') {
+      return calculateTableOperation(sourceVariable, variables, allVariables);
+    }
+
+    // For regular variables, get the value from variables object
     const value = variables[source.value];
     if (value === undefined) return null;
 

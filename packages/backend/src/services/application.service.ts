@@ -2,6 +2,7 @@ import { AppDataSource } from '../config/database';
 import { CreditApplication } from '../entities/CreditApplication';
 import { WorkflowService } from './workflow.service';
 import { WorkflowExecutionService } from './workflowExecution.service';
+import { calculateDerivedVariables } from '../utils/variableCalculation';
 import { ILike } from 'typeorm';
 
 interface FindAllParams {
@@ -22,11 +23,22 @@ export class ApplicationService {
       throw new Error('Workflow not found');
     }
 
-    const result = await this.workflowExecutionService.execute(workflow, variables);
+    // Get trigger node variables for calculations
+    const triggerNode = workflow.nodes.find(node => node.type === 'trigger');
+    if (!triggerNode?.data.variables) {
+      throw new Error('No variables defined in trigger node');
+    }
 
+    // Calculate all derived variables (calculated and table operations)
+    const allVariables = calculateDerivedVariables(variables, triggerNode.data.variables);
+
+    // Execute workflow with all variables
+    const result = await this.workflowExecutionService.execute(workflow, allVariables);
+
+    // Create application with all variables (input and calculated)
     const application = this.applicationRepository.create({
       workflowId,
-      variables,
+      variables: allVariables, // Store both input and calculated variables
       status: result.status,
       creditScore: result.creditScore,
       comment: result.comment
