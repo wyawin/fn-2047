@@ -5,11 +5,14 @@ import {
   VariableType, 
   CalculatedVariable,
   CalculatedSource,
-  TableVariable 
+  TableVariable,
+  TableOperationType,
+  TableOperationVariable 
 } from '../../types/variables';
 import { VARIABLE_OPERATIONS } from '../../constants/variables';
 import { SourceInput } from './SourceInput';
 import { TableVariableForm } from './TableVariableForm';
+import { TableOperationForm } from './TableOperationForm';
 import { detectCircularDependency } from '../../utils/variableUtils';
 
 interface VariableFormProps {
@@ -28,6 +31,15 @@ export function VariableForm({ existingVariables, onAddVariable }: VariableFormP
   ]);
   const [columns, setColumns] = useState([]);
   const [error, setError] = useState<string | null>(null);
+  const [tableOperation, setTableOperation] = useState<{
+    tableVariableId: string;
+    columnId: string;
+    operation: TableOperationType;
+  }>({
+    tableVariableId: '',
+    columnId: '',
+    operation: 'sum'
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,10 +89,16 @@ export function VariableForm({ existingVariables, onAddVariable }: VariableFormP
         type: 'table',
         columns
       };
+    } else if (variableType === 'table-operation') {
+      variable = {
+        ...baseVariable,
+        type: 'table-operation',
+        ...tableOperation
+      };
     } else {
       variable = {
         ...baseVariable,
-        type: variableType as Exclude<VariableType, 'calculated' | 'table'>,
+        type: variableType as Exclude<VariableType, 'calculated' | 'table' | 'table-operation'>,
         value: undefined
       };
     }
@@ -100,6 +118,11 @@ export function VariableForm({ existingVariables, onAddVariable }: VariableFormP
     ]);
     setColumns([]);
     setError(null);
+    setTableOperation({
+      tableVariableId: '',
+      columnId: '',
+      operation: 'sum'
+    });
   };
 
   const updateSource = (index: 0 | 1, source: CalculatedSource) => {
@@ -122,6 +145,12 @@ export function VariableForm({ existingVariables, onAddVariable }: VariableFormP
 
     if (variableType === 'table') {
       return columns.length > 0;
+    }
+
+    if (variableType === 'table-operation') {
+      return tableOperation.tableVariableId && 
+             tableOperation.columnId && 
+             tableOperation.operation;
     }
 
     return true;
@@ -148,6 +177,7 @@ export function VariableForm({ existingVariables, onAddVariable }: VariableFormP
           <option value="boolean">Yes/No</option>
           <option value="table">Table</option>
           <option value="calculated">Calculated</option>
+          <option value="table-operation">Table Operation</option>
         </select>
       </div>
 
@@ -194,6 +224,16 @@ export function VariableForm({ existingVariables, onAddVariable }: VariableFormP
         <TableVariableForm
           columns={columns}
           onChange={setColumns}
+        />
+      )}
+
+      {variableType === 'table-operation' && (
+        <TableOperationForm
+          existingVariables={existingVariables}
+          tableVariableId={tableOperation.tableVariableId}
+          columnId={tableOperation.columnId}
+          operation={tableOperation.operation}
+          onChange={setTableOperation}
         />
       )}
 

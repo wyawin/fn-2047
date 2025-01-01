@@ -1,6 +1,7 @@
 import { Workflow, WorkflowNode, ConditionConfig } from '../types/workflow';
 import { calculateCreditScore } from '../utils/creditScore';
 import { evaluateCondition } from '../utils/conditionEvaluation';
+import { calculateDerivedVariables } from '../utils/variableCalculation';
 
 interface ExecutionResult {
   status: 'approved' | 'rejected' | 'review';
@@ -10,17 +11,26 @@ interface ExecutionResult {
 
 export class WorkflowExecutionService {
   async execute(workflow: Workflow, variables: Record<string, any>): Promise<ExecutionResult> {
+    // Get trigger node variables for calculations
+    const triggerNode = workflow.nodes.find(node => node.type === 'trigger');
+    if (!triggerNode?.data.variables) {
+      throw new Error('No variables defined in trigger node');
+    }
+
+    // Calculate all derived variables (calculated and table operations)
+    const allVariables = calculateDerivedVariables(variables, triggerNode.data.variables);
+
     // Find and execute credit score node first
     const creditScoreNode = this.findCreditScoreNode(workflow);
     let creditScore: number | undefined;
 
     if (creditScoreNode) {
-      creditScore = calculateCreditScore(creditScoreNode.data.config, variables);
-      variables.creditScore = creditScore; // Add credit score to variables for conditions
+      creditScore = calculateCreditScore(creditScoreNode.data.config, allVariables);
+      allVariables.creditScore = creditScore; // Add credit score to variables for conditions
     }
 
     // Start execution from trigger node
-    const result = await this.executeWorkflowLogic(workflow, variables, creditScore);
+    const result = await this.executeWorkflowLogic(workflow, allVariables, creditScore);
     return {
       ...result,
       creditScore,

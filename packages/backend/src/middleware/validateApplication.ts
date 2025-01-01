@@ -2,13 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 
 const tableValueSchema = z.array(z.record(z.any()));
+const scalarValueSchema = z.union([z.string(), z.number(), z.boolean()]);
 
 const applicationSchema = z.object({
   workflowId: z.string().uuid(),
   variables: z.record(z.union([
-    z.string(),
-    z.number(),
-    z.boolean(),
+    scalarValueSchema,
     tableValueSchema
   ])),
 });

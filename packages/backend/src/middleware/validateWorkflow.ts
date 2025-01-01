@@ -45,6 +45,15 @@ const variableSchema = z.discriminatedUnion('type', [
     type: z.literal('table'),
     columns: z.array(tableColumnSchema),
   }),
+  z.object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string().optional(),
+    type: z.literal('table-operation'),
+    tableVariableId: z.string(),
+    columnId: z.string(),
+    operation: z.enum(['sum', 'average', 'min', 'max', 'median']),
+  }),
 ]);
 
 const nodeDataSchema = z.object({

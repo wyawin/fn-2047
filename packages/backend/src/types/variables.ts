@@ -1,4 +1,6 @@
-export type VariableType = 'string' | 'number' | 'boolean' | 'calculated' | 'table';
+export type VariableType = 'string' | 'number' | 'boolean' | 'calculated' | 'table' | 'table-operation';
+export type SourceType = 'variable' | 'manual';
+export type TableOperationType = 'sum' | 'average' | 'min' | 'max' | 'median';
 
 export interface TableColumn {
   id: string;
@@ -14,7 +16,7 @@ export interface BaseVariable {
 }
 
 export interface StandardVariable extends BaseVariable {
-  type: Exclude<VariableType, 'calculated' | 'table'>;
+  type: Exclude<VariableType, 'calculated' | 'table' | 'table-operation'>;
   value?: string | number | boolean;
 }
 
@@ -23,8 +25,15 @@ export interface TableVariable extends BaseVariable {
   columns: TableColumn[];
 }
 
+export interface TableOperationVariable extends BaseVariable {
+  type: 'table-operation';
+  tableVariableId: string;
+  columnId: string;
+  operation: TableOperationType;
+}
+
 export interface CalculatedSource {
-  type: 'variable' | 'manual';
+  type: SourceType;
   value: string;
 }
 
@@ -34,4 +43,4 @@ export interface CalculatedVariable extends BaseVariable {
   sourceVariables: [CalculatedSource, CalculatedSource];
 }
 
-export type WorkflowVariable = StandardVariable | CalculatedVariable | TableVariable;
+export type WorkflowVariable = StandardVariable | CalculatedVariable | TableVariable | TableOperationVariable;

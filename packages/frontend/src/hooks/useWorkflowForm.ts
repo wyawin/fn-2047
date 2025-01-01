@@ -34,7 +34,7 @@ export function useWorkflowForm(workflowId: string | undefined) {
 
   const getTriggerVariables = (): WorkflowVariable[] => {
     const triggerNode = workflow?.nodes.find(node => node.type === 'trigger');
-    return triggerNode?.data.variables?.filter(v => v.type !== 'calculated') || [];
+    return triggerNode?.data.variables?.filter(v => (v.type !== 'calculated' && v.type !== 'table-operation')) || [];
   };
 
   const getAllVariables = (): WorkflowVariable[] => {
