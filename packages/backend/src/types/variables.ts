@@ -1,5 +1,4 @@
 export type VariableType = 'string' | 'number' | 'boolean' | 'calculated' | 'table';
-export type SourceType = 'variable' | 'manual';
 
 export interface TableColumn {
   id: string;
@@ -25,8 +24,8 @@ export interface TableVariable extends BaseVariable {
 }
 
 export interface CalculatedSource {
-  type: SourceType;
-  value: string; // Either variable ID or manual number value
+  type: 'variable' | 'manual';
+  value: string;
 }
 
 export interface CalculatedVariable extends BaseVariable {
@@ -36,9 +35,3 @@ export interface CalculatedVariable extends BaseVariable {
 }
 
 export type WorkflowVariable = StandardVariable | CalculatedVariable | TableVariable;
-
-export interface VariableOperation {
-  label: string;
-  value: CalculatedVariable['operation'];
-  symbol: string;
-}

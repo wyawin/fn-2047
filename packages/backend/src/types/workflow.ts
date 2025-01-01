@@ -1,18 +1,7 @@
+import { WorkflowVariable } from './variables';
+
 export type NodeType = 'trigger' | 'condition' | 'action' | 'credit-score' | 'credit-score-check';
 export type ConnectionType = 'default' | 'true' | 'false';
-
-export interface ConditionConfig {
-  variable: string;
-  operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'greater_than_equals' | 'less_than_equals';
-  value: string | number;
-}
-
-export interface WorkflowVariable {
-  id: string;
-  name: string;
-  type: 'string' | 'number' | 'boolean';
-  description: string;
-}
 
 export interface Connection {
   id: string;
@@ -38,4 +27,7 @@ export interface Workflow {
   name: string;
   nodes: WorkflowNode[];
   connections: Connection[];
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }

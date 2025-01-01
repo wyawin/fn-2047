@@ -1,9 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 
+const tableValueSchema = z.array(z.record(z.any()));
+
 const applicationSchema = z.object({
   workflowId: z.string().uuid(),
-  variables: z.record(z.any()),
+  variables: z.record(z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    tableValueSchema
+  ])),
 });
 
 export const validateApplication = (req: Request, res: Response, next: NextFunction) => {

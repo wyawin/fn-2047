@@ -6,11 +6,52 @@ const positionSchema = z.object({
   y: z.number(),
 });
 
+const tableColumnSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  type: z.enum(['string', 'number', 'boolean']),
+  description: z.string().optional(),
+});
+
+const variableSchema = z.discriminatedUnion('type', [
+  z.object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string().optional(),
+    type: z.enum(['string', 'number', 'boolean']),
+    value: z.any().optional(),
+  }),
+  z.object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string().optional(),
+    type: z.literal('calculated'),
+    operation: z.enum(['add', 'subtract', 'multiply', 'divide']),
+    sourceVariables: z.tuple([
+      z.object({
+        type: z.enum(['variable', 'manual']),
+        value: z.string(),
+      }),
+      z.object({
+        type: z.enum(['variable', 'manual']),
+        value: z.string(),
+      }),
+    ]),
+  }),
+  z.object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string().optional(),
+    type: z.literal('table'),
+    columns: z.array(tableColumnSchema),
+  }),
+]);
+
 const nodeDataSchema = z.object({
   title: z.string(),
   description: z.string(),
   config: z.record(z.any()),
-  variables: z.array(z.any()).optional(),
+  variables: z.array(variableSchema).optional(),
 });
 
 const nodeSchema = z.object({

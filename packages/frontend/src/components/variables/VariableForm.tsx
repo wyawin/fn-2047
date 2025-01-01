@@ -4,10 +4,12 @@ import {
   WorkflowVariable, 
   VariableType, 
   CalculatedVariable,
-  CalculatedSource 
+  CalculatedSource,
+  TableVariable 
 } from '../../types/variables';
 import { VARIABLE_OPERATIONS } from '../../constants/variables';
 import { SourceInput } from './SourceInput';
+import { TableVariableForm } from './TableVariableForm';
 import { detectCircularDependency } from '../../utils/variableUtils';
 
 interface VariableFormProps {
@@ -24,6 +26,7 @@ export function VariableForm({ existingVariables, onAddVariable }: VariableFormP
     { type: 'variable', value: '' },
     { type: 'variable', value: '' }
   ]);
+  const [columns, setColumns] = useState([]);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -59,18 +62,28 @@ export function VariableForm({ existingVariables, onAddVariable }: VariableFormP
       description
     };
 
-    const variable: WorkflowVariable = variableType === 'calculated'
-      ? {
-          ...baseVariable,
-          type: 'calculated',
-          operation,
-          sourceVariables
-        }
-      : {
-          ...baseVariable,
-          type: variableType as Exclude<VariableType, 'calculated'>,
-          value: undefined
-        };
+    let variable: WorkflowVariable;
+
+    if (variableType === 'calculated') {
+      variable = {
+        ...baseVariable,
+        type: 'calculated',
+        operation,
+        sourceVariables
+      };
+    } else if (variableType === 'table') {
+      variable = {
+        ...baseVariable,
+        type: 'table',
+        columns
+      };
+    } else {
+      variable = {
+        ...baseVariable,
+        type: variableType as Exclude<VariableType, 'calculated' | 'table'>,
+        value: undefined
+      };
+    }
 
     onAddVariable(variable);
     resetForm();
@@ -85,6 +98,7 @@ export function VariableForm({ existingVariables, onAddVariable }: VariableFormP
       { type: 'variable', value: '' },
       { type: 'variable', value: '' }
     ]);
+    setColumns([]);
     setError(null);
   };
 
@@ -95,14 +109,22 @@ export function VariableForm({ existingVariables, onAddVariable }: VariableFormP
     setSourceVariables(newSources);
   };
 
-  const isCalculatedValid = () => {
-    if (variableType !== 'calculated') return true;
-    if (error) return false;
+  const isValid = () => {
+    if (!name) return false;
     
-    return sourceVariables.every(source => 
-      (source.type === 'variable' && source.value) || 
-      (source.type === 'manual' && !isNaN(Number(source.value)))
-    );
+    if (variableType === 'calculated') {
+      if (error) return false;
+      return sourceVariables.every(source => 
+        (source.type === 'variable' && source.value) || 
+        (source.type === 'manual' && !isNaN(Number(source.value)))
+      );
+    }
+
+    if (variableType === 'table') {
+      return columns.length > 0;
+    }
+
+    return true;
   };
 
   return (
@@ -121,9 +143,10 @@ export function VariableForm({ existingVariables, onAddVariable }: VariableFormP
           onChange={e => setVariableType(e.target.value as VariableType)}
           className="px-3 py-2 border rounded-lg"
         >
-          <option value="string">String</option>
+          <option value="string">Text</option>
           <option value="number">Number</option>
-          <option value="boolean">Boolean</option>
+          <option value="boolean">Yes/No</option>
+          <option value="table">Table</option>
           <option value="calculated">Calculated</option>
         </select>
       </div>
@@ -167,6 +190,13 @@ export function VariableForm({ existingVariables, onAddVariable }: VariableFormP
         </div>
       )}
 
+      {variableType === 'table' && (
+        <TableVariableForm
+          columns={columns}
+          onChange={setColumns}
+        />
+      )}
+
       <input
         type="text"
         placeholder="Description (optional)"
@@ -177,7 +207,7 @@ export function VariableForm({ existingVariables, onAddVariable }: VariableFormP
 
       <button
         type="submit"
-        disabled={!isCalculatedValid()}
+        disabled={!isValid()}
         className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg 
           hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
