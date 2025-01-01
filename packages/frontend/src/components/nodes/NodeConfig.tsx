@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { WorkflowNode } from '../../types/workflow';
 import { X } from 'lucide-react';
 import { TriggerConfig } from './config/TriggerConfig';
@@ -32,7 +33,7 @@ export function NodeConfig({ node, workflow, onClose, onUpdate }: NodeConfigProp
     }
   };
 
-  return (
+  return createPortal(
     <div 
       className="fixed inset-0 flex items-center justify-center z-[1000]"
       onClick={(e) => {
@@ -43,7 +44,7 @@ export function NodeConfig({ node, workflow, onClose, onUpdate }: NodeConfigProp
     >
       <div className="fixed inset-0 bg-black bg-opacity-20" aria-hidden="true" />
       <div 
-        className="relative bg-white rounded-lg shadow-xl w-[600px] max-h-[80vh] overflow-hidden flex flex-col"
+        className="relative bg-white rounded-lg shadow-xl w-[600px] max-h-[90vh] overflow-hidden flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b">
@@ -60,6 +61,7 @@ export function NodeConfig({ node, workflow, onClose, onUpdate }: NodeConfigProp
           {renderConfig()}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
