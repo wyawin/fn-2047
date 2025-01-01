@@ -7,8 +7,8 @@ interface ZoomState {
 
 interface PanState {
   isPanning: boolean;
-  startX: number;
-  startY: number;
+  lastX: number;
+  lastY: number;
 }
 
 export function useCanvasZoom() {
@@ -19,8 +19,8 @@ export function useCanvasZoom() {
 
   const panState = useRef<PanState>({
     isPanning: false,
-    startX: 0,
-    startY: 0
+    lastX: 0,
+    lastY: 0
   });
 
   const handleZoom = useCallback((delta: number, point: { x: number; y: number }) => {
@@ -41,28 +41,32 @@ export function useCanvasZoom() {
   }, []);
 
   const startPanning = useCallback((e: React.MouseEvent) => {
-    // Check if the click target is the canvas background
-    const isCanvasBackground = (e.target as HTMLElement).classList.contains('canvas-background');
-    
-    if (isCanvasBackground && e.button === 0) { // Left click on canvas background
+    // Only start panning on left mouse button
+    if (e.button === 0) {
       panState.current = {
         isPanning: true,
-        startX: e.clientX - zoom.position.x,
-        startY: e.clientY - zoom.position.y
+        lastX: e.clientX,
+        lastY: e.clientY
       };
       e.preventDefault();
     }
-  }, [zoom.position]);
+  }, []);
 
   const handlePanning = useCallback((e: React.MouseEvent) => {
     if (panState.current.isPanning) {
+      const deltaX = e.clientX - panState.current.lastX;
+      const deltaY = e.clientY - panState.current.lastY;
+
       setZoom(current => ({
         ...current,
         position: {
-          x: e.clientX - panState.current.startX,
-          y: e.clientY - panState.current.startY
+          x: current.position.x + deltaX,
+          y: current.position.y + deltaY
         }
       }));
+
+      panState.current.lastX = e.clientX;
+      panState.current.lastY = e.clientY;
     }
   }, []);
 

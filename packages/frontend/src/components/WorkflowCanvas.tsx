@@ -75,8 +75,9 @@ export function WorkflowCanvas({ workflow, onUpdateWorkflow }: WorkflowCanvasPro
   }, [handleZoom]);
 
   const handleMouseMoveWithPan = useCallback((e: React.MouseEvent) => {
-    handlePanning(e);
-    if (!isPanning) {
+    if (isPanning) {
+      handlePanning(e);
+    } else {
       handleMouseMove(e);
     }
   }, [handlePanning, handleMouseMove, isPanning]);
@@ -86,8 +87,10 @@ export function WorkflowCanvas({ workflow, onUpdateWorkflow }: WorkflowCanvasPro
   };
 
   const handleCanvasClickWithReset = (e: React.MouseEvent) => {
-    handleCanvasClick(e);
-    setSelectedConnection(null);
+    if (!isPanning) {
+      handleCanvasClick(e);
+      setSelectedConnection(null);
+    }
   };
 
   return (
@@ -130,19 +133,10 @@ export function WorkflowCanvas({ workflow, onUpdateWorkflow }: WorkflowCanvasPro
         onMouseUp={stopPanning}
         onMouseLeave={stopPanning}
         onClick={handleCanvasClickWithReset}
+        onMouseDown={startPanning}
       >
-        {/* Canvas Background - Used for panning detection */}
-        <div 
-          className="canvas-background absolute inset-0 bg-grid-pattern opacity-10"
-          onMouseDown={startPanning}
-          style={{
-            transform: `translate(${zoom.position.x}px, ${zoom.position.y}px) scale(${zoom.scale})`,
-            transformOrigin: '0 0'
-          }}
-        />
-
         <div
-          className="workflow-content"
+          className="workflow-content absolute inset-0"
           style={{
             transform: `translate(${zoom.position.x}px, ${zoom.position.y}px) scale(${zoom.scale})`,
             transformOrigin: '0 0'
