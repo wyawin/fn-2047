@@ -93,6 +93,17 @@ export function WorkflowCanvas({ workflow, onUpdateWorkflow }: WorkflowCanvasPro
     }
   };
 
+  const handleCanvasMouseDown = (e: React.MouseEvent) => {
+    // Only start panning if clicking directly on the canvas or workflow-content
+    const target = e.target as HTMLElement;
+    if (
+      target.classList.contains('workflow-canvas') || 
+      target.classList.contains('workflow-content')
+    ) {
+      startPanning(e);
+    }
+  };
+
   return (
     <div className="relative w-full h-[calc(100vh-4rem)] bg-gray-50 overflow-hidden">
       {/* Controls */}
@@ -127,13 +138,13 @@ export function WorkflowCanvas({ workflow, onUpdateWorkflow }: WorkflowCanvasPro
       </div>
 
       <div 
-        className={`relative w-full h-full ${isPanning ? 'cursor-move' : 'cursor-default'}`}
+        className={`workflow-canvas relative w-full h-full ${isPanning ? 'cursor-move' : 'cursor-default'}`}
         onWheel={handleWheel}
         onMouseMove={handleMouseMoveWithPan}
         onMouseUp={stopPanning}
         onMouseLeave={stopPanning}
         onClick={handleCanvasClickWithReset}
-        onMouseDown={startPanning}
+        onMouseDown={handleCanvasMouseDown}
       >
         <div
           className="workflow-content absolute inset-0"
