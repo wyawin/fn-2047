@@ -58,6 +58,24 @@ export function FormField({ variable, value, onChange }: FormFieldProps) {
           <option value="true">Yes</option>
           <option value="false">No</option>
         </select>
+      ) : variable.type === 'date' ? (
+        <input
+          type="date"
+          id={variable.id}
+          value={value || ''}
+          onChange={(e) => onChange(variable, e.target.value)}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+          required
+        />
+      ) : variable.type === 'datetime' ? (
+        <input
+          type="datetime-local"
+          id={variable.id}
+          value={value || ''}
+          onChange={(e) => onChange(variable, e.target.value)}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+          required
+        />
       ) : (
         <input
           type={variable.type === 'number' ? 'number' : 'text'}

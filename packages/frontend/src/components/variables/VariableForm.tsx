@@ -175,6 +175,8 @@ export function VariableForm({ existingVariables, onAddVariable }: VariableFormP
           <option value="string">Text</option>
           <option value="number">Number</option>
           <option value="boolean">Yes/No</option>
+          <option value="date">Date</option>
+          <option value="datetime">Date & Time</option>
           <option value="table">Table</option>
           <option value="calculated">Calculated</option>
           <option value="table-operation">Table Operation</option>

@@ -70,12 +70,16 @@ export function VariablesList({ application }: VariablesListProps) {
     if (value === null || value === undefined) return '-';
     if (typeof value === 'boolean') return value ? 'Yes' : 'No';
     
-    // Check if the column is a number type
     const columns = tableColumns[variableId];
     const column = columns?.find(col => col.id === columnId);
     
     if (column?.type === 'number' && typeof value === 'number') {
       return value.toLocaleString();
+    }
+    
+    if (column?.type === 'date' || column?.type === 'datetime') {
+      const date = new Date(value);
+      return column.type === 'datetime' ? date.toLocaleString() : date.toLocaleDateString();
     }
     
     return String(value);
@@ -85,6 +89,16 @@ export function VariablesList({ application }: VariablesListProps) {
     if (value === null || value === undefined) return '-';
     if (typeof value === 'boolean') return value ? 'Yes' : 'No';
     if (typeof value === 'number') return value.toLocaleString();
+
+    // Format date strings
+    if (value && (value.match(/^\d{4}-\d{2}-\d{2}$/) || value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/))) {
+      const date = new Date(value);
+      if (value.includes('T')) {
+        return date.toLocaleString();
+      }
+      return date.toLocaleDateString();
+    }
+
     return String(value);
   };
 
