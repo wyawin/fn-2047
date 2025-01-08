@@ -46,34 +46,35 @@ export function TableField({ variable, value = [], onChange }: TableFieldProps) 
   return (
     <div className="space-y-4">
       <div className="overflow-x-auto border rounded-lg">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="w-full divide-y divide-gray-200">
           <thead>
             <tr className="bg-gray-50">
               {variable.columns.map(column => (
                 <th
                   key={column.id}
-                  className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  style={{ minWidth: '240px' }}
                 >
                   {column.name}
                 </th>
               ))}
-              <th className="w-10"></th>
+              <th className="w-20"></th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {value.map((row, index) => (
               <tr key={index}>
                 {variable.columns.map(column => (
-                  <td key={column.id} className="px-4 py-2 text-sm">
+                  <td key={column.id} className="px-2 py-3 text-sm whitespace-nowrap">
                     {column.type === 'boolean' 
                       ? (row[column.id] ? 'Yes' : 'No')
                       : row[column.id]}
                   </td>
                 ))}
-                <td className="px-4 py-2">
+                <td className="px-4 py-3">
                   <button
                     onClick={() => handleRemoveRow(index)}
-                    className="p-1 hover:bg-gray-100 rounded-full text-gray-500"
+                    className="p-1.5 hover:bg-gray-100 rounded-full text-gray-500"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -82,12 +83,12 @@ export function TableField({ variable, value = [], onChange }: TableFieldProps) 
             ))}
             <tr>
               {variable.columns.map(column => (
-                <td key={column.id} className="px-4 py-2">
+                <td key={column.id} className="px-2 py-3">
                   {column.type === 'boolean' ? (
                     <select
                       value={newRow[column.id] || ''}
                       onChange={e => handleInputChange(column.id, e.target.value)}
-                      className="w-full px-2 py-1 text-sm border rounded"
+                      className="w-full px-4 py-2 text-sm border rounded"
                     >
                       <option value="">Select...</option>
                       <option value="true">Yes</option>
@@ -98,19 +99,19 @@ export function TableField({ variable, value = [], onChange }: TableFieldProps) 
                       type={column.type === 'number' ? 'number' : 'text'}
                       value={newRow[column.id] || ''}
                       onChange={e => handleInputChange(column.id, e.target.value)}
-                      className="w-full px-2 py-1 text-sm border rounded"
+                      className="w-full px-4 py-2 text-sm border rounded"
                       placeholder={`Enter ${column.name.toLowerCase()}`}
                     />
                   )}
                 </td>
               ))}
-              <td className="px-4 py-2">
+              <td className="px-4 py-3">
                 <button
                   onClick={handleAddRow}
                   disabled={!variable.columns.every(col => 
                     newRow[col.id] !== undefined && newRow[col.id] !== ''
                   )}
-                  className="p-1 hover:bg-gray-100 rounded-full text-primary-500 disabled:opacity-50"
+                  className="p-1.5 hover:bg-gray-100 rounded-full text-primary-500 disabled:opacity-50"
                 >
                   <Plus size={14} />
                 </button>
