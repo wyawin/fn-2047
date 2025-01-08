@@ -43,6 +43,23 @@ export function TableField({ variable, value = [], onChange }: TableFieldProps) 
     }));
   };
 
+  const formatValue = (value: any, columnType: string): string => {
+    if (value === null || value === undefined) return '-';
+
+    switch (columnType) {
+      case 'boolean':
+        return value ? 'Yes' : 'No';
+      case 'number':
+        return typeof value === 'number' ? value.toLocaleString() : String(value);
+      case 'date':
+        return new Date(value).toLocaleDateString();
+      case 'datetime':
+        return new Date(value).toLocaleString();
+      default:
+        return String(value);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="overflow-x-auto border rounded-lg">
@@ -52,7 +69,7 @@ export function TableField({ variable, value = [], onChange }: TableFieldProps) 
               {variable.columns.map(column => (
                 <th
                   key={column.id}
-                  className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   style={{ minWidth: '240px' }}
                 >
                   {column.name}
@@ -65,10 +82,8 @@ export function TableField({ variable, value = [], onChange }: TableFieldProps) 
             {value.map((row, index) => (
               <tr key={index}>
                 {variable.columns.map(column => (
-                  <td key={column.id} className="px-2 py-3 text-sm whitespace-nowrap">
-                    {column.type === 'boolean' 
-                      ? (row[column.id] ? 'Yes' : 'No')
-                      : row[column.id]}
+                  <td key={column.id} className="px-5 py-3 text-sm whitespace-nowrap">
+                    {formatValue(row[column.id], column.type)}
                   </td>
                 ))}
                 <td className="px-4 py-3">
@@ -83,7 +98,7 @@ export function TableField({ variable, value = [], onChange }: TableFieldProps) 
             ))}
             <tr>
               {variable.columns.map(column => (
-                <td key={column.id} className="px-2 py-3">
+                <td key={column.id} className="px-5 py-3">
                   {column.type === 'boolean' ? (
                     <select
                       value={newRow[column.id] || ''}
