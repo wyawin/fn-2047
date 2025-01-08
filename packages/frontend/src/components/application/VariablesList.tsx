@@ -7,7 +7,7 @@ interface VariablesListProps {
 }
 
 export function VariablesList({ application }: VariablesListProps) {
-  const { loading, getVariableLabel, getColumnLabel, tableColumns } = useApplicationVariables(application);
+  const { loading, getVariableLabel, getColumnLabel, tableColumns, variableTypes } = useApplicationVariables(application);
 
   if (loading) {
     return (
@@ -63,7 +63,7 @@ export function VariablesList({ application }: VariablesListProps) {
       }
       return value.join(', ');
     }
-    return formatValue(value);
+    return formatValue(value, variableId);
   };
 
   const formatTableValue = (value: any, variableId: string, columnId: string): string => {
@@ -77,29 +77,43 @@ export function VariablesList({ application }: VariablesListProps) {
       return value.toLocaleString();
     }
     
-    if (column?.type === 'date' || column?.type === 'datetime') {
-      const date = new Date(value);
-      return column.type === 'datetime' ? date.toLocaleString() : date.toLocaleDateString();
+    if (column?.type === 'date') {
+      return new Date(value).toLocaleDateString();
+    }
+
+    if (column?.type === 'datetime') {
+      return new Date(value).toLocaleString();
     }
     
     return String(value);
   };
 
-  const formatValue = (value: any): string => {
+  const formatValue = (value: any, variableId: string): string => {
     if (value === null || value === undefined) return '-';
-    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-    if (typeof value === 'number') return value.toLocaleString();
 
-    // Format date strings
-    if (value && (value.match(/^\d{4}-\d{2}-\d{2}$/) || value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/))) {
-      const date = new Date(value);
-      if (value.includes('T')) {
-        return date.toLocaleString();
-      }
-      return date.toLocaleDateString();
+    const type = variableTypes[variableId];
+    if (!type) return String(value);
+
+    switch (type) {
+      case 'boolean':
+        return value ? 'Yes' : 'No';
+      
+      case 'number':
+        return typeof value === 'number' ? value.toLocaleString() : String(value);
+      
+      case 'date':
+        return new Date(value).toLocaleDateString();
+      
+      case 'datetime':
+        return new Date(value).toLocaleString();
+      
+      case 'calculated':
+      case 'table-operation':
+        return typeof value === 'number' ? value.toLocaleString() : String(value);
+      
+      default:
+        return String(value);
     }
-
-    return String(value);
   };
 
   return (
