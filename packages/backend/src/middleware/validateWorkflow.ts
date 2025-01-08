@@ -9,7 +9,7 @@ const positionSchema = z.object({
 const tableColumnSchema = z.object({
   id: z.string(),
   name: z.string(),
-  type: z.enum(['string', 'number', 'boolean']),
+  type: z.enum(['string', 'number', 'boolean', 'date', 'datetime']),
   description: z.string().optional(),
 });
 
@@ -18,7 +18,7 @@ const variableSchema = z.discriminatedUnion('type', [
     id: z.string(),
     name: z.string(),
     description: z.string().optional(),
-    type: z.enum(['string', 'number', 'boolean']),
+    type: z.enum(['string', 'number', 'boolean', 'date', 'datetime']),
     value: z.any().optional(),
   }),
   z.object({

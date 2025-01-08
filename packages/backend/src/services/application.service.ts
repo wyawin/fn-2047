@@ -4,7 +4,7 @@ import { WorkflowService } from './workflow.service';
 import { WorkflowExecutionService } from './workflowExecution.service';
 import { calculateDerivedVariables } from '../utils/variableCalculation';
 import { ILike } from 'typeorm';
-
+import {WorkflowVariable} from '../types/variables'
 interface FindAllParams {
   page: number;
   limit: number;
@@ -29,8 +29,11 @@ export class ApplicationService {
       throw new Error('No variables defined in trigger node');
     }
 
+    // Process date and datetime values
+    const processedVariables = this.processDateValues(variables, triggerNode.data.variables);
+
     // Calculate all derived variables (calculated and table operations)
-    const allVariables = calculateDerivedVariables(variables, triggerNode.data.variables);
+    const allVariables = calculateDerivedVariables(processedVariables, triggerNode.data.variables);
 
     // Execute workflow with all variables
     const result = await this.workflowExecutionService.execute(workflow, allVariables);
@@ -38,13 +41,47 @@ export class ApplicationService {
     // Create application with all variables (input and calculated)
     const application = this.applicationRepository.create({
       workflowId,
-      variables: allVariables, // Store both input and calculated variables
+      variables: allVariables,
       status: result.status,
       creditScore: result.creditScore,
       comment: result.comment
     });
 
     return this.applicationRepository.save(application);
+  }
+
+  private processDateValues(
+    variables: Record<string, any>,
+    variableDefinitions: WorkflowVariable[]
+  ): Record<string, any> {
+    const processed = { ...variables };
+
+    variableDefinitions.forEach(varDef => {
+      const value = variables[varDef.id];
+      if (!value) return;
+
+      if (varDef.type === 'date' || varDef.type === 'datetime') {
+        processed[varDef.id] = new Date(value).toISOString();
+      } else if (varDef.type === 'table') {
+        const dateColumns = varDef.columns.filter(col => 
+          col.type === 'date' || col.type === 'datetime'
+        );
+        
+        if (dateColumns.length > 0 && Array.isArray(processed[varDef.id])) {
+          processed[varDef.id] = processed[varDef.id].map((row: any) => {
+            const processedRow = { ...row };
+            dateColumns.forEach(col => {
+              if (processedRow[col.id]) {
+                processedRow[col.id] = new Date(processedRow[col.id]).toISOString();
+              }
+            });
+            return processedRow;
+          });
+        }
+      }
+    });
+
+    return processed;
   }
 
   async findAll({ page, limit, search, status }: FindAllParams) {

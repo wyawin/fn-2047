@@ -1,11 +1,11 @@
-export type VariableType = 'string' | 'number' | 'boolean' | 'calculated' | 'table' | 'table-operation';
+export type VariableType = 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'calculated' | 'table' | 'table-operation';
 export type SourceType = 'variable' | 'manual';
 export type TableOperationType = 'sum' | 'average' | 'min' | 'max' | 'median';
 
 export interface TableColumn {
   id: string;
   name: string;
-  type: 'string' | 'number' | 'boolean';
+  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime';
   description?: string;
 }
 
